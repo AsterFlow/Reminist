@@ -243,4 +243,4 @@ Contributions are welcome\! If you find a bug or have a feature request, please 
 
 ## 📜 License
 
-This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE) file for details.
+This project is licensed under the **MIT License**. See the [LICENSE](https://github.com/Ashu11-A/Reminist/blob/main/LICENSE.md) file for details.
