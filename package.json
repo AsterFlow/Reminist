@@ -8,6 +8,27 @@
   "type": "module",
   "license": "MIT",
   "author": "Ashu11-A",
+  "keywords": [
+    "typescript",
+    "router",
+    "routing",
+    "radix-tree",
+    "trie",
+    "performance",
+    "high-performance",
+    "fast",
+    "lightweight",
+    "zero-dependency",
+    "nodejs",
+    "bun",
+    "deno",
+    "javascript",
+    "url-router",
+    "path-matching",
+    "type-safe",
+    "optimized",
+    "low-latency"
+  ],
   "scripts": {
     "dev": "bun run --inspect-brk=ws://localhost:6499 test.ts",
     "build": "bun run build.ts"
