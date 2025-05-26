@@ -1,4 +1,3 @@
-// src/controllers/Node.ts
 import type { NodeParams } from '../types/node'
 import { NodeType } from '../types/node'
 
@@ -23,7 +22,6 @@ export class Node<Data> {
     this.store = params.store
     
     const name = this.name
-    // ADDED: Logic to handle `:param` style routes.
     if (name.startsWith(':')) {
       this.type = NodeType.Dynamic
       this.paramName = name.substring(1)
@@ -45,7 +43,6 @@ export class Node<Data> {
     }
   }
 
-  // No changes needed for the methods below
   addChild(node: Node<Data>): void {
     this.childCount++
     switch (node.type) {

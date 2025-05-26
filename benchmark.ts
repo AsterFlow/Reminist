@@ -1,8 +1,7 @@
-import { Bench } from 'tinybench' // ou 'tinybench' dependendo da sua instalação
+import { Bench } from 'tinybench' 
 import { Memoirist } from 'memoirist'
-import { Reminist } from './src' // Ajuste o caminho se necessário
+import { Reminist } from './src'
 
-// --- Dados de Teste ---
 const staticRoutes = [
   '/',
   '/about',
@@ -16,24 +15,19 @@ const dynamicRoutes = [
   '/users/:id',
   '/products/:category/:productId',
   '/posts/:year/:month/:slug',
-  '/files/*filePath', // Rota catch-all para Reminist
-  '/docs/*',         // Rota wildcard para Memoirist
+  '/files/*filePath',
+  '/docs/*',
 ]
 
-// Instâncias
 const reminist = new Reminist({ keys: ['GET'] })
 const memoirist = new Memoirist()
 
-// --- Definição dos Testes ---
-
 console.log('🏁 Iniciando Benchmark: Reminist vs. Memoirist 🏁\n')
 
-// --- 1. Teste de Adição de Rotas (Setup) ---
 const addBench = new Bench({ time: 1000 })
 
 addBench
   .add('Reminist: Add All Routes', () => {
-    // Instanciação dentro do teste para medir a criação + adição
     const r = new Reminist({ keys: ['GET'] })
     for (const route of staticRoutes) r.add('GET', route, { route })
     for (const route of dynamicRoutes) r.add('GET', route, { route })
@@ -48,7 +42,6 @@ await addBench.run()
 console.log('--- Teste de Adição (Setup) ---')
 console.table(addBench.table())
 
-// Prepara os roteadores para os testes de busca (agora fora do benchmark)
 for (const route of staticRoutes) {
   reminist.add('GET', route, { route })
   memoirist.add('GET', route, { route })
@@ -58,8 +51,6 @@ for (const route of dynamicRoutes) {
   memoirist.add('GET', route, { route })
 }
 
-// --- 2. Testes de Busca (Runtime) ---
-// CORREÇÃO: Criamos uma nova instância do Bench para a segunda suíte de testes.
 const findBench = new Bench({ time: 1000 })
 
 findBench
