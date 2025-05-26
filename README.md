@@ -24,12 +24,12 @@ Reminist is a high-performance routing library built with TypeScript. It uses an
 
 ## 🚀 Key Features
 
-  \* **Exceptional Performance**: Radix tree implementation with `O(1)` lookups for static nodes and optimized path resolution.
-  \* **Type-Safe by Design**: Written entirely in TypeScript for a great developer experience.
-  \* **Zero Dependencies**: Lightweight and easy to integrate into any project.
-  \* **Flexible Route Patterns**: Full support for static, dynamic, wildcard, and catch-all routes.
-  \* **Environment Agnostic**: Works seamlessly in Node.js, Bun, Deno, and modern browsers.
-  \* **Path Caching**: Automatically caches processed URL paths to avoid redundant string manipulation.
+  * **Exceptional Performance**: Radix tree implementation with `O(1)` lookups for static nodes and optimized path resolution.
+  * **Type-Safe by Design**: Written entirely in TypeScript for a great developer experience.
+  * **Zero Dependencies**: Lightweight and easy to integrate into any project.
+  * **Flexible Route Patterns**: Full support for static, dynamic, wildcard, and catch-all routes.
+  * **Environment Agnostic**: Works seamlessly in Node.js, Bun, Deno, and modern browsers.
+  * **Path Caching**: Automatically caches processed URL paths to avoid redundant string manipulation.
 
 -----
 
