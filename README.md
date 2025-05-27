@@ -45,8 +45,8 @@ This test measures the performance of adding a large set of routes.
 
 | Task Name | Latency avg (ns) | Throughput avg (ops/s) |
 | :--- | :--- | :--- |
-| **Reminist: Add All Routes** | **3,667.2** | **286,944** |
-| Memoirist: Add All Routes | 6,403.7 | 170,519 |
+| **Reminist: Add All Routes** | **4904.6** | **212,549** |
+| Memoirist: Add All Routes | 7108.7 | 151,965 |
 
 ### Search Test (Runtime)
 
@@ -54,23 +54,21 @@ This test measures the lookup performance for various route types.
 
 | Task Name | Latency avg (ns) | Throughput avg (ops/s) |
 | :--- | :--- | :--- |
-| **Reminist: Find Static Route** | **76.38** | **13,525,457** |
-| Memoirist: Find Static Route | 85.04 | 13,019,877 |
-| **Reminist: Find Dynamic Route** | **71.51** | **14,356,322** |
-| Memoirist: Find Dynamic Route | 138.14 | 7,578,509 |
-| **Reminist: Find Catch-All Route** | **69.76** | **16,160,417** |
-| Memoirist: Find Wildcard Route | 71.95 | 14,428,133 |
-| Reminist: Find Non-Existent Route | 59.85 | 17,778,347 |
-| **Memoirist: Find Non-Existent Route** | **49.20** | **20,804,685** |
+| **Reminist: Find Static Routes** | **195.36** | **5,363,768** |
+| Memoirist: Find Static Routes | 212.94 | 4,951,915 |
+| **Reminist: Find Dynamic/Wildcard Routes** | **296.40** | **3,646,520** |
+| Memoirist: Find Dynamic/Wildcard Routes | 477.33 | 2,154,391 |
+| **Reminist: Find Non-Existent Route** | **54.60** | **19,483,306** |
+| Memoirist: Find Non-Existent Route | 55.95 | 18,049,404 |
 
 #### Analysis
 
-  * **Setup Performance**: Reminist is approximately **75% faster** at adding routes, resulting in a **68% higher throughput** during the setup phase.
-  * **Dynamic Routes**: For dynamic routes (e.g., `/users/:id`), Reminist is nearly **twice as fast**, which is crucial for modern applications.
-  * **Static & Wildcard Routes**: Reminist consistently outperforms in lookups for static and wildcard/catch-all routes.
-  * **Non-Existent Routes**: Memoirist shows a faster lookup for non-existent paths, indicating a different internal optimization for failed searches. However, Reminist remains exceptionally fast, with an average lookup time of less than 60 nanoseconds.
+  * **Setup Performance**: Reminist is approximately **45% faster** at adding routes, resulting in over **40% higher throughput** during the setup phase.
+  * **Dynamic & Wildcard Routes**: For dynamic and wildcard routes (e.g., `/users/:id` or `/assets/*`), Reminist is over **60% faster**, a significant advantage for modern API-driven applications.
+  * **Static Routes**: Reminist maintains a consistent edge in lookups for static routes, delivering higher throughput.
+  * **Non-Existent Routes**: Both routers are exceptionally fast at handling non-existent paths, with Reminist showing a slight advantage in both latency and throughput.
 
-Overall, the benchmarks demonstrate Reminist's superior performance in the most critical and frequent operations: adding routes and finding existing paths.
+Overall, the benchmarks demonstrate Reminist's superior performance across the board, especially in the most critical and frequent operations of adding and finding routes.
 
 -----
 
