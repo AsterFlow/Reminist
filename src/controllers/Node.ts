@@ -15,6 +15,7 @@ export class Node<Data> {
   private wildcardChild: Node<Data> | null = null
   
   public childCount = 0
+  public nonStaticChildCount = 0
 
   constructor(params: NodeParams<Data, string, Node<Data>[], boolean>) {
     this.name = params.name
@@ -45,6 +46,8 @@ export class Node<Data> {
 
   addChild(node: Node<Data>): void {
     this.childCount++
+
+    if (node.type !== NodeType.Static) this.nonStaticChildCount++
     switch (node.type) {
     case NodeType.Static:
       if (!this.staticChildren) this.staticChildren = new Map()
@@ -67,6 +70,7 @@ export class Node<Data> {
 
   removeChild(node: Node<Data>): void {
     this.childCount--
+    if (node.type !== NodeType.Static) this.nonStaticChildCount--
     switch (node.type) {
     case NodeType.Static:
       this.staticChildren?.delete(node.name)
