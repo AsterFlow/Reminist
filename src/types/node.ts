@@ -1,5 +1,3 @@
-import type { Node } from '../controllers/Node'
-
 export enum NodeType {
   Static = 0,
   Dynamic = 1,
@@ -10,12 +8,11 @@ export enum NodeType {
 
 export type NodeParams<
   Data,
+  Endpoint extends boolean,
   Path extends string,
-  Nodes extends readonly Node<any>[],
-  Endpoint extends boolean
 > = {
   name: Path
-  endpoint: Endpoint,
-  store?: Data
-  children?: Nodes
-}
+} & (Endpoint extends true
+  ? { endpoint: true; store: Data }
+  : { endpoint: false; store?: never }
+)

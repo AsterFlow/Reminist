@@ -1,38 +1,43 @@
+import { NullProtoObj } from '../utils/nullPrototype'
 import type { NodeParams } from '../types/node'
 import { NodeType } from '../types/node'
 
-export class Node<Data> {
+export class Node<
+  Data,
+  Path extends string,
+  Endpoint extends boolean,
+> {
   name: string
-  store?: Data
-  endpoint: boolean
+  store: Endpoint extends true ? Data : unknown
+  endpoint: Endpoint
   type: NodeType
   paramName: string
 
-  private staticChildren: Map<string, Node<Data>> | null = null
-  private dynamicChild: Node<Data> | null = null
-  private catchAllChild: Node<Data> | null = null
-  private optionalCatchAllChild: Node<Data> | null = null
-  private wildcardChild: Node<Data> | null = null
+  public static: NullProtoObj<Node<Data, any, any>> = new NullProtoObj()
+  public dynamic: Node<Data, any, any> | null = null
+  public catchAll: Node<Data, any, any> | null = null
+  public optionalCatchAll: Node<Data, any, any> | null = null
+  public wildcard: Node<Data, any, any> | null = null
   
   public childCount = 0
   public nonStaticChildCount = 0
 
-  constructor(params: NodeParams<Data, string, Node<Data>[], boolean>) {
+  constructor(params: NodeParams<Data, Endpoint, Path>) {
     this.name = params.name
-    this.endpoint = params.endpoint
-    this.store = params.store
+    this.endpoint = params.endpoint as Endpoint
+    this.store = (params as { store: Data }).store
     
     const name = this.name
     if (name.startsWith(':')) {
       this.type = NodeType.Dynamic
       this.paramName = name.substring(1)
-    } else if (name.startsWith('[[...') && name.endsWith(']]')) {
+    } else if (name.startsWith('[[...')) {
       this.type = NodeType.OptionalCatchAll
       this.paramName = name.substring(5, name.length - 2)
-    } else if (name.startsWith('[...') && name.endsWith(']')) {
+    } else if (name.startsWith('[...')) {
       this.type = NodeType.CatchAll
       this.paramName = name.substring(4, name.length - 1)
-    } else if (name.startsWith('[') && name.endsWith(']')) {
+    } else if (name.startsWith('[')) {
       this.type = NodeType.Dynamic
       this.paramName = name.substring(1, name.length - 1)
     } else if (name === '*') {
@@ -44,69 +49,49 @@ export class Node<Data> {
     }
   }
 
-  addChild(node: Node<Data>): void {
+  addChild(node: Node<Data, string, boolean>): void {
     this.childCount++
 
     if (node.type !== NodeType.Static) this.nonStaticChildCount++
     switch (node.type) {
     case NodeType.Static:
-      if (!this.staticChildren) this.staticChildren = new Map()
-      this.staticChildren.set(node.name, node)
+      if (!this.static) this.static = new NullProtoObj()
+      this.static![node.name] = node
       break
     case NodeType.Dynamic:
-      this.dynamicChild = node
+      this.dynamic = node
       break
     case NodeType.CatchAll:
-      this.catchAllChild = node
+      this.catchAll = node
       break
     case NodeType.OptionalCatchAll:
-      this.optionalCatchAllChild = node
+      this.optionalCatchAll = node
       break
     case NodeType.Wildcard:
-      this.wildcardChild = node
+      this.wildcard = node
       break
     }
   }
 
-  removeChild(node: Node<Data>): void {
+  removeChild(node: Node<Data, any, any>): void {
     this.childCount--
     if (node.type !== NodeType.Static) this.nonStaticChildCount--
     switch (node.type) {
     case NodeType.Static:
-      this.staticChildren?.delete(node.name)
+      if (this.static) delete this.static[node.name]
       break
     case NodeType.Dynamic:
-      this.dynamicChild = null
+      this.dynamic = null
       break
     case NodeType.CatchAll:
-      this.catchAllChild = null
+      this.catchAll = null
       break
     case NodeType.OptionalCatchAll:
-      this.optionalCatchAllChild = null
+      this.optionalCatchAll = null
       break
     case NodeType.Wildcard:
-      this.wildcardChild = null
+      this.wildcard = null
       break
     }
-  }
-
-  findStaticChild(name: string) {
-    return this.staticChildren?.get(name)
-  }
-
-  findDynamicChild() {
-    return this.dynamicChild
-  }
-  
-  findCatchAllChild() {
-    return this.catchAllChild
-  }
-
-  findOptionalCatchAllChild() {
-    return this.optionalCatchAllChild
-  }
-
-  findWildcardChild() {
-    return this.wildcardChild
   }
 }

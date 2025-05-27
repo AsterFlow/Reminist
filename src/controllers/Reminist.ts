@@ -1,11 +1,12 @@
 import type { ReministOptions } from '../types/reminist'
+import { NullProtoObj } from '../utils/nullPrototype'
 import { Node } from './Node'
 
 // Cache de paths processados para evitar split/replace repetidos (Memoização)
-const pathCache = new Map<string, string[]>()
+const pathCache = new NullProtoObj() as NullProtoObj<string[]>
 
 function getParts(path: string): string[] {
-  const cached = pathCache.get(path)
+  const cached = pathCache[path]
   if (cached) return cached
 
   let start = 0
@@ -15,10 +16,10 @@ function getParts(path: string): string[] {
     
   const result = path.substring(start, end).split('/')
   if (result.length === 1 && result[0] === '') {
-    pathCache.set(path, [])
+    pathCache[path] = []
     return []
   }
-  pathCache.set(path, result)
+  pathCache[path] = result
   return result
 }
 
@@ -27,24 +28,26 @@ export class Reminist<
   const Keys extends readonly string[] = readonly string[]
 > {
   private keys: Keys = [] as unknown as Keys
-  private routers = new Map<Keys[number], Node<Data>>()
+  private routers = new NullProtoObj() as NullProtoObj<Node<Data, string, boolean>>
+  private staticRouter = new NullProtoObj() as NullProtoObj<NullProtoObj<Node<Data, string, boolean>>>
 
   constructor(options?: ReministOptions<Keys>) {
     if (options?.keys) this.keys = options.keys
-    // Loop `for` tradicional é mais rápido que `forEach`
-    for (let i = 0, len = this.keys?.length; i < len; i++) {
+
+    for (let i = 0, len = this.keys.length; i < len; i++) {
       const method = this.keys[i]!
-      this.routers.set(method, new Node({ name: '/', endpoint: false }))
+      this.routers[method] = new Node({ name: '/', endpoint: false })
+      this.staticRouter[method] = new NullProtoObj()
     }
   }
 
-  getRoot(key: Keys[number]): Node<Data> {
-    let root = this.routers.get(key)
+  getRoot(key: Keys[number]): Node<Data, string, boolean> {
+    let root = this.routers[key]
 
     if (!root) {
       root = new Node({ name: '/', endpoint: false })
 
-      this.routers.set(key, new Node({ name: '/', endpoint: false }))
+      this.routers[key] = new Node({ name: '/', endpoint: false })
     }
 
     return  root
@@ -52,39 +55,49 @@ export class Reminist<
 
   add(key: Keys[number], path: string, store: Data): void {
     const parts = getParts(path)
+    const isStatic = !parts.some(p => p.startsWith(':') || p.startsWith('*') || p.startsWith('['))
+
+    if (isStatic) {
+      if (!this.staticRouter[key]) this.staticRouter[key] = new NullProtoObj()
+      const newNode = new Node({ name: path, endpoint: true, store });
+
+      (this.staticRouter[key] as unknown as NullProtoObj<Node<Data, string, boolean>>)[path] = newNode
+      return
+    }
+
     let current = this.getRoot(key)
-    
-    for (let i = 0, len = parts.length; i < len; i++) {
+    for (let i = 0; i < parts.length; i++) {
       const part = parts[i]!
-      const child = current.findStaticChild(part)
+      const child = current.static?.[part]
 
       if (child) {
         current = child
-      } else {
-        const newNode = new Node<Data>({ name: part, endpoint: false })
-        current.addChild(newNode)
-        current = newNode
+        continue 
       }
+
+      const newNode = new Node<Data, string, boolean>({ name: part, endpoint: false })
+      current.addChild(newNode)
+      current = newNode
     }
 
-    if (current.endpoint) {
-      throw new Error(`Unable to add path '${path}' because a final node already exists`)
-    }
-
-    current.store = store
     current.endpoint = true
+    current.store = store
   }
 
-  find(key: Keys[number], path: string): { node: Node<Data> | null; params: Record<string, string> } {
+  find(key: Keys[number], path: string): { node: Node<Data, string, boolean> | null; params: Record<string, string> } {
+    const staticNode = this.staticRouter[key]?.[path]
+    if (staticNode) {
+      return { node: staticNode, params: {} }
+    }
+
     const parts = getParts(path)
     let current = this.getRoot(key)
     const params: Record<string, string> = {}
-    const partsLen = parts.length
 
-    for (let i = 0; i < partsLen; i++) {
+    for (let i = 0; i < parts.length; i++) {
       const part = parts[i]!
-      const staticChild = current.findStaticChild(part)
-
+      
+      const staticChild = current.static[part]
       if (staticChild) {
         current = staticChild
         continue
@@ -93,14 +106,14 @@ export class Reminist<
       // If there are no special children, we can fail fast.
       if (current.nonStaticChildCount === 0) return { node: null, params: {} }
       
-      const dynamicChild = current.findDynamicChild()
+      const dynamicChild = current.dynamic
       if (dynamicChild) {
         params[dynamicChild.paramName] = part
         current = dynamicChild
         continue
       }
 
-      const catchAllChild = current.findCatchAllChild()
+      const catchAllChild = current.catchAll
       if (catchAllChild) {
         params[catchAllChild.paramName] = parts.slice(i).join('/')
         current = catchAllChild
@@ -108,7 +121,7 @@ export class Reminist<
         return { node: current, params }
       }
 
-      const optionalCatchAllChild = current.findOptionalCatchAllChild()
+      const optionalCatchAllChild = current.optionalCatchAll
       if (optionalCatchAllChild) {
         params[optionalCatchAllChild.paramName] = parts.slice(i).join('/')
         current = optionalCatchAllChild
@@ -116,7 +129,7 @@ export class Reminist<
         return { node: current, params }
       }
       
-      const wildcardChild = current.findWildcardChild()
+      const wildcardChild = current.wildcard
       if (wildcardChild) {
         current = wildcardChild
         params['*'] = parts.slice(i).join('/')
@@ -129,7 +142,7 @@ export class Reminist<
 
     if (current.endpoint) return { node: current, params }
 
-    const optionalChild = current.findOptionalCatchAllChild();
+    const optionalChild = current.optionalCatchAll
     if (optionalChild && optionalChild.endpoint) {
       // The slug is empty, which is valid for an optional catch-all.
       params[optionalChild.paramName] = ''
@@ -145,14 +158,19 @@ export class Reminist<
   }
 
   delete(key: Keys[number], path: string): boolean {
+    if (this.staticRouter[key]?.[path]) {
+      delete this.staticRouter[key]![path]
+      return true
+    }
+
     const parts = getParts(path)
     if (parts.length === 0 && path !== '/') return false
 
-    const stack: Node<Data>[] = [this.getRoot(key)]
+    const stack: Node<Data, string, boolean>[] = [this.getRoot(key)]
     let current = stack[0]!
 
     for (let i = 0, len = parts.length; i < len; i++) {
-      const child = current.findStaticChild(parts[i]!)
+      const child = current.static?.[parts[i]!]
       if (!child) return false
 
       current = child

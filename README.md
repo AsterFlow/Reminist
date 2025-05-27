@@ -18,57 +18,18 @@
 
 > Blazing fast, zero-dependency, TypeScript-native router for any environment.
 
-Reminist is a high-performance routing library built with TypeScript. It uses an optimized **Radix Tree** structure to deliver `O(1)` (constant time) lookups for static routes and extremely fast resolution for dynamic and wildcard routes. It's designed for high-throughput environments where every microsecond counts.
+Reminist is a high-performance routing library built with TypeScript. It uses an optimized **Radix Tree** structure where lookup speed is proportional to the length of the route path, not the total number of routes. This makes route resolution incredibly fast and scalable, especially for high-throughput environments where every microsecond counts.
 
 -----
 
 ## 🚀 Key Features
 
-  * **Exceptional Performance**: Radix tree implementation with `O(1)` lookups for static nodes and optimized path resolution.
+  * **Exceptional Performance**: Lookups are independent of the number of routes. Performance is proportional to the length of the path being processed (`O(k)`), not the total number of routes (`O(n)`).
   * **Type-Safe by Design**: Written entirely in TypeScript for a great developer experience.
   * **Zero Dependencies**: Lightweight and easy to integrate into any project.
   * **Flexible Route Patterns**: Full support for static, dynamic, wildcard, and catch-all routes.
   * **Environment Agnostic**: Works seamlessly in Node.js, Bun, Deno, and modern browsers.
   * **Path Caching**: Automatically caches processed URL paths to avoid redundant string manipulation.
-
------
-
-## 🏁 Benchmarks
-
-The following benchmarks compare Reminist against Memoirist, another high-performance router, to showcase its performance.
-
-> Lower latency is better. Higher throughput is better.
-
-### Addition Test (Setup)
-
-This test measures the performance of adding a large set of routes.
-
-| Task Name | Latency avg (ns) | Throughput avg (ops/s) |
-| :--- | :--- | :--- |
-| **Reminist: Add All Routes** | **4904.6** | **212,549** |
-| Memoirist: Add All Routes | 7108.7 | 151,965 |
-
-### Search Test (Runtime)
-
-This test measures the lookup performance for various route types.
-
-| Task Name | Latency avg (ns) | Throughput avg (ops/s) |
-| :--- | :--- | :--- |
-| **Reminist: Find Static Routes** | **195.36** | **5,363,768** |
-| Memoirist: Find Static Routes | 212.94 | 4,951,915 |
-| **Reminist: Find Dynamic/Wildcard Routes** | **296.40** | **3,646,520** |
-| Memoirist: Find Dynamic/Wildcard Routes | 477.33 | 2,154,391 |
-| **Reminist: Find Non-Existent Route** | **54.60** | **19,483,306** |
-| Memoirist: Find Non-Existent Route | 55.95 | 18,049,404 |
-
-#### Analysis
-
-  * **Setup Performance**: Reminist is approximately **45% faster** at adding routes, resulting in over **40% higher throughput** during the setup phase.
-  * **Dynamic & Wildcard Routes**: For dynamic and wildcard routes (e.g., `/users/:id` or `/assets/*`), Reminist is over **60% faster**, a significant advantage for modern API-driven applications.
-  * **Static Routes**: Reminist maintains a consistent edge in lookups for static routes, delivering higher throughput.
-  * **Non-Existent Routes**: Both routers are exceptionally fast at handling non-existent paths, with Reminist showing a slight advantage in both latency and throughput.
-
-Overall, the benchmarks demonstrate Reminist's superior performance across the board, especially in the most critical and frequent operations of adding and finding routes.
 
 -----
 
@@ -134,6 +95,65 @@ if (result.node) {
 
 -----
 
+## 🏁 Benchmarks
+
+The following benchmarks compare Reminist against other high-performance routers like Memoirist and Rou3.
+
+> Lower latency is better. Higher throughput is better.
+
+### Route Addition Test
+
+This test measures the performance of adding a large set of routes to the router instance.
+
+| Task Name | Latency avg (ns) | Throughput avg (ops/s) |
+| :--- | :--- | :--- |
+| **Reminist: Add All Routes** | **1424.0** | **747,520** |
+| Rou3: Add All Routes | 2623.0 | 403,721 |
+| Memoirist: Add All Routes | 5150.8 | 205,402 |
+
+### Find Test (Static)
+
+This test measures lookup performance for static routes (e.g., `/about/contact`).
+
+| Task Name | Latency avg (ns) | Throughput avg (ops/s) |
+| :--- | :--- | :--- |
+| **Reminist: Find Static** | **74.81** | **13,581,441** |
+| Rou3: Find Static | 100.94 | 10,097,628 |
+| Memoirist: Find Static | 232.57 | 4,536,933 |
+
+### Find Test (Dynamic & Wildcard)
+
+This test measures lookup performance for routes with dynamic parameters or wildcards (e.g., `/users/:id` or `/assets/*`).
+
+| Task Name | Latency avg (ns) | Throughput avg (ops/s) |
+| :--- | :--- | :--- |
+| **Reminist: Find Dynamic/Wildcard** | **627.44** | **1,691,265** |
+| Memoirist: Find Dynamic/Wildcard | 660.59 | 1,634,293 |
+| Rou3: Find Dynamic/Wildcard | 1495.9 | 742,280 |
+
+### Find Test (Non-Existent)
+
+This test measures performance when searching for a route that does not exist.
+
+| Task Name | Latency avg (ns) | Throughput avg (ops/s) |
+| :--- | :--- | :--- |
+| **Memoirist: Find Missing** | **46.17** | **22,460,954** |
+| Reminist: Find Missing | 75.27 | 13,677,236 |
+| Rou3: Find Missing | 143.18 | 8,488,401 |
+
+#### Analysis
+
+The benchmarks highlight Reminist's exceptional performance in the most common routing operations.
+
+  * **Route Addition**: Reminist is **\~84% faster** than Rou3 and **\~260% faster** than Memoirist, making it ideal for applications with dynamic routing or frequent setup phases.
+  * **Static Routes**: For static routes, Reminist leads with the lowest latency and highest throughput, outperforming Rou3 by **\~34%** and Memoirist by over **197%** in throughput.
+  * **Dynamic & Wildcard Routes**: Reminist maintains its edge, proving faster and more efficient than both Memoirist and Rou3 for complex routing patterns.
+  * **Non-Existent Routes**: While all routers handle misses quickly, Memoirist shows remarkable performance in this specific scenario, making it the fastest for handling invalid paths.
+
+Overall, Reminist consistently delivers the best all-around performance, excelling in route registration and lookups for static, dynamic, and wildcard paths.
+
+-----
+
 ## 📖 API Reference
 
 ### `new Reminist<Data, Keys>(options)`
@@ -187,7 +207,7 @@ At its core, Reminist uses a **Radix Tree** (a highly efficient type of Trie) to
 
 #### The Problem
 
-A simple array of routes would require iterating through every single route for each incoming request (`O(N)`), which is extremely slow. A basic hash map (`Map`) could find static routes quickly (`O(1)`), but it can't handle dynamic parameters like `/users/:id`.
+A simple array of routes would require iterating through every single route for each incoming request (`O(n)`), which is extremely slow. A basic hash map (`Map`) could find static routes quickly (average `O(1)`), but it can't handle dynamic parameters like `/users/:id`.
 
 #### The Solution: A Tree of Prefixes
 
@@ -197,25 +217,25 @@ For example, the routes `/users/profile` and `/users/settings` would be stored l
 
 ```
 (GET)
-  └── "users"
-      ├── "profile"  (endpoint)
-      └── "settings" (endpoint)
+  └── "users"
+      ├── "profile"  (endpoint)
+      └── "settings" (endpoint)
 ```
 
 When you search for `/users/profile`, the router doesn't compare against all routes. It traverses the tree:
 
-1.  Finds the "users" child.
-2.  From there, finds the "profile" child.
-3.  The search depth is proportional to the number of segments in the URL, **not** the total number of routes in the system.
+1.  Finds the "users" child.
+2.  From there, finds the "profile" child.
+3.  The search depth is proportional to the number of segments in the URL (**path length `k`**), **not** the total number of routes in the system (**`n`**). This is why Radix Tree performance is described as `O(k)`.
 
 #### The Reminist Optimization ✨
 
-Reminist takes this a step further. Instead of storing a node's children in an array and iterating to find a match (which is `O(N)`), we do the following:
+Reminist takes this a step further. Instead of storing a node's children in an array and iterating to find a match (which is slow), we do the following:
 
-  \* **Static children** are stored in a `Map`. This makes finding the next segment an **`O(1)`** operation.
-  \* **Dynamic, wildcard, and catch-all children** are stored in dedicated properties on the parent node. Since a node can only have one dynamic child, this lookup is also an **`O(1)`** property access.
+  * **Static children** are stored in a `Map`. This makes finding the next segment an **`O(1)`** operation.
+  * **Dynamic, wildcard, and catch-all children** are stored in dedicated properties on the parent node. Since a node can only have one of each special child type, this lookup is also an **`O(1)`** property access.
 
-This structure eliminates loops in the critical path of the `find` method, making it one of the fastest possible router implementations.
+This structure eliminates loops in the critical path of the `find` method. The total time for a lookup is simply a series of these fast, `O(1)` segment lookups, making the overall operation one of the fastest possible for a router.
 
 -----
 

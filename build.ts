@@ -1,3 +1,4 @@
+// build.ts
 import { build, type Options } from 'tsup'
 import { writeFile } from 'fs/promises'
 import { generateDtsBundle } from 'dts-bundle-generator'
@@ -12,46 +13,41 @@ const sharedConfig: Options = {
   platform: 'node',
   entry: ['src/index.ts'],
   bundle: true,
-  // minify: true,
   minifyIdentifiers: true,
   minifySyntax: true,
-  // minifyWhitespace: true,
   skipNodeModulesBundle: true,
   clean: true,
-  dts: false
+  dts: false,
+  target: 'es2022',
+  tsconfig: 'tsconfig.json',
 }
 
 await build({
+  ...sharedConfig,
   format: 'cjs',
   outDir: 'dist/cjs',
-  tsconfig: './tsconfig.cjs.json',
-  splitting: false,
-  shims: true,
-  ...sharedConfig
 })
 
 await build({
+  ...sharedConfig,
   format: 'esm',
   outDir: 'dist/mjs',
-  tsconfig: './tsconfig.mjs.json',
   splitting: true,
-  cjsInterop: false,
-  ...sharedConfig
 })
 
 await writeFile('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }, null, 2))
 await writeFile('dist/mjs/package.json', JSON.stringify({ type: 'module' }, null, 2))
 
-const dtsPath = join(process.cwd(), 'dist/types/index.ts')
+const dtsPath = join(process.cwd(), 'dist/types/index.d.ts') 
 const dtsCode = generateDtsBundle([{
   filePath: join(process.cwd(), 'src/index.ts'),
   output: {
     sortNodes: true,
-    exportReferencedTypes: true,
+    exportReferencedTypes: false, 
     inlineDeclareExternals: true,
     inlineDeclareGlobals: true
   }
 }])
 
 await mkdir(dirname(dtsPath), { recursive: true })
-await writeFile(dtsPath, dtsCode, { encoding: 'utf-8' })
+await writeFile(dtsPath, dtsCode.join('\n'), { encoding: 'utf-8' })

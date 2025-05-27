@@ -1,16 +1,14 @@
-import { Bench } from 'tinybench';
 import { Memoirist } from 'memoirist';
 import { Reminist } from 'reminist';
+import { addRoute, createRouter, findRoute } from 'rou3';
+import { Bench } from 'tinybench';
 
 // --- 0. TYPE DEFINITIONS ---
-// Define a common type for the value stored in the router (handler object).
 interface RouteValue {
   handler: () => string;
 }
 
 // --- 1. ROUTE DEFINITIONS ---
-// Centralized route definitions for clarity and easy modification.
-
 const staticRoutes = [
   { method: 'GET', url: '/user' },
   { method: 'GET', url: '/user/comments' },
@@ -29,142 +27,89 @@ const dynamicRoutes = [
   { method: 'GET', url: '/static/*' }, // Wildcard route
 ];
 
-const nonExistentRoute = {
-  method: 'GET',
-  url: '/this/route/is/not/defined',
-};
-
+const nonExistentRoute = { method: 'GET', url: '/this/route/is/not/defined' };
 const allRoutes = [...staticRoutes, ...dynamicRoutes];
 
-// Pre-generate URLs for dynamic route tests to avoid string manipulation within benchmark loops.
-const dynamicTestUrls = dynamicRoutes.map(route => ({
-  ...route,
-  testUrl: route.url
-    .replace(/:[a-zA-Z]+/g, 'param-value') // Replace params like :username with a static value
-    .replace(/\*$/, 'wildcard/path/file.js'), // Replace trailing wildcard with a static path
+const dynamicTestUrls = dynamicRoutes.map(r => ({
+  ...r,
+  testUrl: r.url
+    .replace(/:[a-zA-Z]+/g, 'param-value')
+    .replace(/\*$/, 'wildcard/path/file.js'),
 }));
 
-
-// --- 2. BENCHMARK HELPER FUNCTIONS ---
-
-/**
- * Populates a router instance with a list of routes.
- * Each route is added with a lightweight handler.
- * @param {Reminist<RouteValue> | Memoirist<RouteValue>} router - The router instance.
- * @param {Array<{method: string, url: string}>} routes - The list of routes to add.
- */
-const populateRouter = (
-  router: Reminist<RouteValue> | Memoirist<RouteValue>,
-  routes: Array<{ method: string; url: string }>
-) => {
-  for (const route of routes) {
-    // The handler returns the route's URL. This is a simple, consistent payload.
-    router.add(route.method, route.url, { handler: () => route.url });
+// --- 2. HELPER FUNCTIONS ---
+const populateMemoirist = (router: Memoirist<RouteValue>) => {
+  for (const r of allRoutes) {
+    router.add(r.method, r.url, { handler: () => r.url });
   }
 };
 
-/**
- * Utility function to create, configure, run, and report a benchmark suite.
- * @param {string} title - The title for this benchmark suite.
- * @param {(bench: Bench<Record<string, any>>) => void} defineTasks - Callback to add tasks to the Bench instance.
- */
-const runBenchmarkSuite = async (title: string, defineTasks: (bench: Bench) => void) => {
-  // Each suite uses its own Bench instance to keep results separate and clear.
-  // Time option sets the minimum time (in ms) to run the benchmark task.
+const populateReminist = (router: Reminist<RouteValue>) => {
+  for (const r of allRoutes) {
+    router.add(r.method, r.url, { handler: () => r.url });
+  }
+};
+
+const populateRou3 = (router: ReturnType<typeof createRouter>) => {
+  for (const r of allRoutes) {
+    addRoute(router, r.method, r.url, { handler: () => r.url });
+  }
+};
+
+let reministRouter: Reminist<RouteValue>;
+let memoiristRouter: Memoirist<RouteValue>;
+let rou3Router: ReturnType<typeof createRouter>;
+
+// Setup functions
+const setupReminist = () => { reministRouter = new Reminist<RouteValue>(); populateReminist(reministRouter); };
+const setupMemoirist = () => { memoiristRouter = new Memoirist<RouteValue>(); populateMemoirist(memoiristRouter); };
+const setupRou3 = () => { rou3Router = createRouter(); populateRou3(rou3Router); };
+
+// --- 3. BENCHMARK SUITES ---
+const runSuite = async (title: string, define: (bench: Bench) => void) => {
   const bench = new Bench({ time: 1000, iterations: 1000 });
-
-  defineTasks(bench);
-
+  define(bench);
   await bench.run();
-  console.log(title); // Log title before table for better readability
+  console.log(title);
   console.table(bench.table());
 };
 
-// --- 3. MAIN BENCHMARK EXECUTION ---
-// Orchestrates the execution of all benchmark suites sequentially.
-
 const main = async () => {
-  console.log('🏁 Starting Comparative Benchmarks: Reminist vs. Memoirist 🏁\n');
+  console.log('🏁 Starting Comparative Benchmarks: Reminist vs Memoirist vs Rou3 🏁\n');
 
-  // Suite 0: Route Addition Performance
-  // Measures the time taken to instantiate a router and add all defined routes.
-  await runBenchmarkSuite('--- 0. Route Addition Test (Instantiation & Population) ---', (bench) => {
+  // Suite 0: Addition
+  await runSuite('--- 0. Route Addition Test ---', bench => {
     bench
-      .add('Reminist: Add All Routes', () => {
-        const r = new Reminist<RouteValue>();
-        // The entire process of instantiation and population is benchmarked.
-        populateRouter(r, allRoutes);
-      })
-      .add('Memoirist: Add All Routes', () => {
-        const m = new Memoirist<RouteValue>();
-        populateRouter(m, allRoutes);
-      });
+      .add('Reminist: Add All Routes', () => { populateReminist(new Reminist<RouteValue>()); })
+      .add('Memoirist: Add All Routes', () => { populateMemoirist(new Memoirist<RouteValue>()); })
+      .add('Rou3: Add All Routes', () => { populateRou3(createRouter()); });
   });
 
-  // Setup for Find Tests: These variables will hold router instances
-  // populated once before the 'find' tasks run.
-  let reministWithRoutes: Reminist<RouteValue>;
-  let memoiristWithRoutes: Memoirist<RouteValue>;
-
-  const setupReminist = () => {
-    reministWithRoutes = new Reminist<RouteValue>();
-    populateRouter(reministWithRoutes, allRoutes);
-  };
-
-  const setupMemoirist = () => {
-    memoiristWithRoutes = new Memoirist<RouteValue>();
-    populateRouter(memoiristWithRoutes, allRoutes);
-  };
-
-  // Suite 1: Finding Static Routes
-  // Measures lookup performance for pre-defined static routes.
-  await runBenchmarkSuite('\n--- 1. Find Test (Static Routes) ---', (bench) => {
+  // Suite 1: Static Find
+  await runSuite('\n--- 1. Find Test (Static) ---', bench => {
     bench
-      .add('Reminist: Find Static Routes (All)', () => {
-        for (const route of staticRoutes) {
-          reministWithRoutes.find(route.method, route.url);
-        }
-      }, { beforeAll: setupReminist })
-      .add('Memoirist: Find Static Routes (All)', () => {
-        for (const route of staticRoutes) {
-          memoiristWithRoutes.find(route.method, route.url);
-        }
-      }, { beforeAll: setupMemoirist });
+      .add('Reminist: Find Static', () => { for (const r of staticRoutes) reministRouter.find(r.method, r.url); }, { beforeAll: setupReminist })
+      .add('Memoirist: Find Static', () => { for (const r of staticRoutes) memoiristRouter.find(r.method, r.url); }, { beforeAll: setupMemoirist })
+      .add('Rou3: Find Static', () => { for (const r of staticRoutes) findRoute(rou3Router, r.method, r.url); }, { beforeAll: setupRou3 });
   });
 
-  // Suite 2: Finding Dynamic & Wildcard Routes
-  // Measures lookup performance for routes with parameters or wildcards.
-  await runBenchmarkSuite('\n--- 2. Find Test (Dynamic & Wildcard Routes) ---', (bench) => {
+  // Suite 2: Dynamic & Wildcard Find
+  await runSuite('\n--- 2. Find Test (Dynamic & Wildcard) ---', bench => {
     bench
-      .add('Reminist: Find Dynamic/Wildcard Routes (All)', () => {
-        for (const route of dynamicTestUrls) {
-          reministWithRoutes.find(route.method, route.testUrl);
-        }
-      }, { beforeAll: setupReminist })
-      .add('Memoirist: Find Dynamic/Wildcard Routes (All)', () => {
-        for (const route of dynamicTestUrls) {
-          memoiristWithRoutes.find(route.method, route.testUrl);
-        }
-      }, { beforeAll: setupMemoirist });
+      .add('Reminist: Find Dynamic/Wildcard', () => { for (const r of dynamicTestUrls) reministRouter.find(r.method, r.testUrl); }, { beforeAll: setupReminist })
+      .add('Memoirist: Find Dynamic/Wildcard', () => { for (const r of dynamicTestUrls) memoiristRouter.find(r.method, r.testUrl); }, { beforeAll: setupMemoirist })
+      .add('Rou3: Find Dynamic/Wildcard', () => { for (const r of dynamicTestUrls) findRoute(rou3Router, r.method, r.testUrl); }, { beforeAll: setupRou3 });
   });
 
-  // Suite 3: Finding a Non-Existent Route
-  // Measures performance when a route lookup fails.
-  await runBenchmarkSuite('\n--- 3. Find Test (Non-Existent Route) ---', (bench) => {
+  // Suite 3: Non-Existent Find
+  await runSuite('\n--- 3. Find Test (Non-Existent) ---', bench => {
     bench
-      .add('Reminist: Find Non-Existent Route', () => {
-        reministWithRoutes.find(nonExistentRoute.method, nonExistentRoute.url);
-      }, { beforeAll: setupReminist })
-      .add('Memoirist: Find Non-Existent Route', () => {
-        memoiristWithRoutes.find(nonExistentRoute.method, nonExistentRoute.url);
-      }, { beforeAll: setupMemoirist });
+      .add('Reminist: Find Missing', () => { reministRouter.find(nonExistentRoute.method, nonExistentRoute.url); }, { beforeAll: setupReminist })
+      .add('Memoirist: Find Missing', () => { memoiristRouter.find(nonExistentRoute.method, nonExistentRoute.url); }, { beforeAll: setupMemoirist })
+      .add('Rou3: Find Missing', () => { findRoute(rou3Router, nonExistentRoute.method, nonExistentRoute.url); }, { beforeAll: setupRou3 });
   });
 
   console.log('\n🏁 Benchmarks Complete 🏁');
 };
 
-// Execute the main benchmarking function.
-main().catch(err => {
-  console.error('Benchmark execution failed:', err);
-  process.exit(1);
-});
+main().catch(err => { console.error(err); process.exit(1); });

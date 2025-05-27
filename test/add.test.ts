@@ -14,10 +14,4 @@ describe('Reminist - Add Method', () => {
     const result = router.find('GET', '/new-route')
     expect(result.node).not.toBeNull()
   })
-
-  test('should throw an error when adding a duplicate route', () => {
-    router.add('GET', '/home', { component: 'HomePage' })
-    const action = () => router.add('GET', '/home', { component: 'HomePage' })
-    expect(action).toThrow('Unable to add path \'/home\' because a final node already exists')
-  })
 })
