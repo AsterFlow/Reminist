@@ -24,12 +24,13 @@ function getParts(path: string): string[] {
 }
 
 export class Reminist<
-  Data,
+  const Paths extends readonly string[] = readonly string[],
+  const Context extends { [Path in Paths[number]]: unknown } = { [Path in Paths[number]]: unknown },
   const Keys extends readonly string[] = readonly string[]
 > {
   private keys: Keys = [] as unknown as Keys
-  private routers = new NullProtoObj() as NullProtoObj<Node<Data, string, boolean>>
-  private staticRouter = new NullProtoObj() as NullProtoObj<NullProtoObj<Node<Data, string, boolean>>>
+  private routers = new NullProtoObj() as NullProtoObj<Node<Context[Paths[number]], string, boolean>>
+  private staticRouter = new NullProtoObj() as NullProtoObj<NullProtoObj<Node<Context[Paths[number]], string, boolean>>>
 
   constructor(options?: ReministOptions<Keys>) {
     if (options?.keys) this.keys = options.keys
@@ -41,7 +42,7 @@ export class Reminist<
     }
   }
 
-  getRoot(key: Keys[number]): Node<Data, string, boolean> {
+  getRoot(key: Keys[number]): Node<Context[Paths[number]], string, boolean> {
     let root = this.routers[key]
 
     if (!root) {
@@ -53,7 +54,7 @@ export class Reminist<
     return  root
   }
 
-  add(key: Keys[number], path: string, store: Data): void {
+  add(key: Keys[number], path: Paths[number], store: Context[Paths[number]]): void {
     const parts = getParts(path)
     const isStatic = !parts.some(p => p.startsWith(':') || p.startsWith('*') || p.startsWith('['))
 
@@ -61,7 +62,7 @@ export class Reminist<
       if (!this.staticRouter[key]) this.staticRouter[key] = new NullProtoObj()
       const newNode = new Node({ name: path, endpoint: true, store });
 
-      (this.staticRouter[key] as unknown as NullProtoObj<Node<Data, string, boolean>>)[path] = newNode
+      (this.staticRouter[key] as unknown as NullProtoObj<Node<Context[Paths[number]], string, boolean>>)[path] = newNode
       return
     }
 
@@ -75,7 +76,7 @@ export class Reminist<
         continue 
       }
 
-      const newNode = new Node<Data, string, boolean>({ name: part, endpoint: false })
+      const newNode = new Node<Context[Paths[number]], string, boolean>({ name: part, endpoint: false })
       current.addChild(newNode)
       current = newNode
     }
@@ -84,7 +85,7 @@ export class Reminist<
     current.store = store
   }
 
-  find(key: Keys[number], path: string): { node: Node<Data, string, boolean> | null; params: Record<string, string> } {
+  find(key: Keys[number], path: Paths[number]): { node: Node<Context[Paths[number]], string, boolean> | null; params: Record<string, string> } {
     const staticNode = this.staticRouter[key]?.[path]
     if (staticNode) {
       return { node: staticNode, params: {} }
@@ -152,12 +153,12 @@ export class Reminist<
     return { node: null, params: {} }
   }
 
-  has(key: Keys[number], path: string): boolean {
+  has(key: Keys[number], path: Paths[number]): boolean {
     const result = this.find(key, path)
     return result.node !== null && result.node.endpoint
   }
 
-  delete(key: Keys[number], path: string): boolean {
+  delete(key: Keys[number], path: Paths[number]): boolean {
     if (this.staticRouter[key]?.[path]) {
       delete this.staticRouter[key]![path]
       return true
@@ -166,7 +167,7 @@ export class Reminist<
     const parts = getParts(path)
     if (parts.length === 0 && path !== '/') return false
 
-    const stack: Node<Data, string, boolean>[] = [this.getRoot(key)]
+    const stack: Node<Context[Paths[number]], string, boolean>[] = [this.getRoot(key)]
     let current = stack[0]!
 
     for (let i = 0, len = parts.length; i < len; i++) {
@@ -199,7 +200,7 @@ export class Reminist<
 
   static create<const T extends readonly string[]>(options: { keys: T }) {
     return {
-      withData: <Data>() => new Reminist<Data, T>(options),
+      withData: <const Paths extends readonly string[], Context extends { [Path in Paths[number]]: any } = { [Path in Paths[number]]: any }>() => new Reminist<Paths, Context, T>(options),
     }
   }
 }
