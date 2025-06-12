@@ -35,12 +35,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Ashu11-A/Reminist.git"
+    "url": "git+https://github.com/AsterFlow/Reminist.git"
   },
   "bugs": {
-    "url": "https://github.com/Ashu11-A/Reminist/issues"
+    "url": "https://github.com/AsterFlow/Reminist/issues"
   },
-  "homepage": "https://github.com/Ashu11-A/Reminist",
+  "homepage": "https://github.com/AsterFlow/Reminist",
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",

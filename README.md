@@ -2,14 +2,14 @@
 
 # Reminist
 
-![license-info](https://img.shields.io/github/license/Ashu11-A/Reminist?style=for-the-badge&colorA=302D41&colorB=f9e2af&logoColor=f9e2af)
-![stars-info](https://img.shields.io/github/stars/Ashu11-A/Reminist?colorA=302D41&colorB=f9e2af&style=for-the-badge)
+![license-info](https://img.shields.io/github/license/AsterFlow/Reminist?style=for-the-badge&colorA=302D41&colorB=f9e2af&logoColor=f9e2af)
+![stars-info](https://img.shields.io/github/stars/AsterFlow/Reminist?colorA=302D41&colorB=f9e2af&style=for-the-badge)
 
-![last-commit](https://img.shields.io/github/last-commit/Ashu11-A/Reminist?style=for-the-badge&colorA=302D41&colorB=b4befe)
-![commit-activity](https://img.shields.io/github/commit-activity/y/Ashu11-A/Reminist?style=for-the-badge&colorA=302D41&colorB=f9e2af)
-![code-size](https://img.shields.io/github/languages/code-size/Ashu11-A/Reminist?style=for-the-badge&colorA=302D41&colorB=90dceb)
+![last-commit](https://img.shields.io/github/last-commit/AsterFlow/Reminist?style=for-the-badge&colorA=302D41&colorB=b4befe)
+![commit-activity](https://img.shields.io/github/commit-activity/y/AsterFlow/Reminist?style=for-the-badge&colorA=302D41&colorB=f9e2af)
+![code-size](https://img.shields.io/github/languages/code-size/AsterFlow/Reminist?style=for-the-badge&colorA=302D41&colorB=90dceb)
 
-![top-language](https://img.shields.io/github/languages/top/Ashu11-A/Reminist?style=for-the-badge&colorA=302D41&colorB=90dceb)
+![top-language](https://img.shields.io/github/languages/top/AsterFlow/Reminist?style=for-the-badge&colorA=302D41&colorB=90dceb)
 ![bundle-size](https://img.shields.io/bundlejs/size/Reminist?style=for-the-badge&colorA=302D41&colorB=3ac97b)
 
 </div>
@@ -261,4 +261,4 @@ Contributions are welcome\! If you find a bug or have a feature request, please 
 
 ## 📜 License
 
-This project is licensed under the **MIT License**. See the [LICENSE](https://github.com/Ashu11-A/Reminist/blob/main/LICENSE.md) file for details.
+This project is licensed under the **MIT License**. See the [LICENSE](https://github.com/AsterFlow/Reminist/blob/main/LICENSE.md) file for details.
