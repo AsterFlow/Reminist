@@ -47,14 +47,13 @@ export class Reminist<
 
     if (!root) {
       root = new Node({ name: '/', endpoint: false })
-
       this.routers[key] = new Node({ name: '/', endpoint: false })
     }
 
-    return  root
+    return root
   }
 
-  add(key: Keys[number], path: Paths[number], store: Context[Paths[number]]): void {
+  add<P extends Paths[number]>(key: Keys[number], path: P, store: Context[P]): void {
     const parts = getParts(path)
     const isStatic = !parts.some(p => p.startsWith(':') || p.startsWith('*') || p.startsWith('['))
 
@@ -62,20 +61,22 @@ export class Reminist<
       if (!this.staticRouter[key]) this.staticRouter[key] = new NullProtoObj()
       const newNode = new Node({ name: path, endpoint: true, store });
 
-      (this.staticRouter[key] as unknown as NullProtoObj<Node<Context[Paths[number]], string, boolean>>)[path] = newNode
+      (this.staticRouter[key] as unknown as NullProtoObj<Node<Context[P], string, boolean>>)[path] = newNode
       return
     }
 
     let current = this.getRoot(key)
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]!
-      const child = current.static?.[part]
+      // Usando 'as any' aqui para simplificar, pois a árvore interna lida com a união.
+      const child = (current.static as any)?.[part]
 
       if (child) {
         current = child
         continue 
       }
 
+      // O tipo do dado armazenado no nó é uma união, o que é esperado internamente.
       const newNode = new Node<Context[Paths[number]], string, boolean>({ name: part, endpoint: false })
       current.addChild(newNode)
       current = newNode
@@ -85,8 +86,11 @@ export class Reminist<
     current.store = store
   }
 
-  find(key: Keys[number], path: Paths[number]): { node: Node<Context[Paths[number]], string, boolean> | null; params: Record<string, string> } {
-    const staticNode = this.staticRouter[key]?.[path]
+  find<P extends Paths[number]>(key: Keys[number], path: P): {
+    node: Node<Context[P], string, boolean> | null;
+    params: Record<string, string>;
+  } {
+    const staticNode = this.staticRouter[key]?.[path] as Node<Context[P], string, boolean> | undefined
     if (staticNode) {
       return { node: staticNode, params: {} }
     }
@@ -98,13 +102,12 @@ export class Reminist<
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]!
       
-      const staticChild = current.static[part]
+      const staticChild = (current.static as any)[part] // Usando 'as any' para simplificar a indexação interna
       if (staticChild) {
         current = staticChild
         continue
       }
 
-      // If there are no special children, we can fail fast.
       if (current.nonStaticChildCount === 0) return { node: null, params: {} }
       
       const dynamicChild = current.dynamic
@@ -118,47 +121,43 @@ export class Reminist<
       if (catchAllChild) {
         params[catchAllChild.paramName] = parts.slice(i).join('/')
         current = catchAllChild
-
-        return { node: current, params }
+        return { node: current as Node<Context[P], string, boolean>, params }
       }
 
       const optionalCatchAllChild = current.optionalCatchAll
       if (optionalCatchAllChild) {
         params[optionalCatchAllChild.paramName] = parts.slice(i).join('/')
         current = optionalCatchAllChild
-
-        return { node: current, params }
+        return { node: current as Node<Context[P], string, boolean>, params }
       }
       
       const wildcardChild = current.wildcard
       if (wildcardChild) {
         current = wildcardChild
         params['*'] = parts.slice(i).join('/')
-
-        return { node: current, params }
+        return { node: current as Node<Context[P], string, boolean>, params }
       }
-      // If a static child isn't found and no special children match, then it's a failure.
+
       return { node: null, params: {} }
     }
 
-    if (current.endpoint) return { node: current, params }
+    if (current.endpoint) return { node: current as Node<Context[P], string, boolean>, params }
 
     const optionalChild = current.optionalCatchAll
     if (optionalChild && optionalChild.endpoint) {
-      // The slug is empty, which is valid for an optional catch-all.
       params[optionalChild.paramName] = ''
-      return { node: optionalChild, params }
+      return { node: optionalChild as Node<Context[P], string, boolean>, params }
     }
 
     return { node: null, params: {} }
   }
 
-  has(key: Keys[number], path: Paths[number]): boolean {
+  has<P extends Paths[number]>(key: Keys[number], path: P): boolean {
     const result = this.find(key, path)
     return result.node !== null && result.node.endpoint
   }
 
-  delete(key: Keys[number], path: Paths[number]): boolean {
+  delete<P extends Paths[number]>(key: Keys[number], path: P): boolean {
     if (this.staticRouter[key]?.[path]) {
       delete this.staticRouter[key]![path]
       return true
@@ -171,7 +170,7 @@ export class Reminist<
     let current = stack[0]!
 
     for (let i = 0, len = parts.length; i < len; i++) {
-      const child = current.static?.[parts[i]!]
+      const child = (current.static as any)?.[parts[i]!]
       if (!child) return false
 
       current = child
@@ -183,7 +182,6 @@ export class Reminist<
     current.endpoint = false
     current.store = undefined
 
-    // Poda retroativa
     for (let i = stack.length - 1; i > 0; i--) {
       const node = stack[i]!
       const parent = stack[i - 1]!
