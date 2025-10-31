@@ -69,16 +69,16 @@ interface MyRouteData {
 /**
  * A typed router instance created using Reminist.
  * For comparison, here is how you would create a router that is not typed:
- * const router = new Reminist({ keys: ['GET', 'POST'] })
+ * const router = new Reminist({ keys: ['GET', 'post'] })
  */
-const router = Reminist.create({ keys: ['GET', 'POST'] }).withData<MyRouteData>()
+const router = Reminist.create({ keys: ['GET', 'post'] }).withData<MyRouteData>()
 
 /**
  * Adding routes
  */
 router.add('GET', '/', { id: 'home', handler: (_, res) => res.send('Welcome!') })
 router.add('GET', '/users/:id', { id: 'getUser', handler: (req, res) => res.send(`User: ${req.params.id}`) })
-router.add('POST', '/users', { id: 'createUser', handler: (_, res) => res.send('User created') })
+router.add('post', '/users', { id: 'createUser', handler: (_, res) => res.send('User created') })
 router.add('GET', '/assets/*', { id: 'static', handler: (_, res) => res.send('Serving asset') })
 
 /**

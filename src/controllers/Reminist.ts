@@ -69,7 +69,24 @@ export class Reminist<
     for (let i = 0; i < parts.length; i++) {
       const part = parts[i]!
       // Usando 'as any' aqui para simplificar, pois a árvore interna lida com a união.
-      const child = (current.static as any)?.[part]
+      let child = current.static[part]
+
+      if (!child) {
+        child = current.dynamic ?? undefined
+
+        
+        if (child && child.name !== part) {
+          const router = []
+          for (let index = 0; index < i; index++) {
+            router.push(parts[index] ?? '')
+          }
+          router.push(child.name)
+
+          throw new Error(
+            `\x1b[33m[Reminist] There are two conflicting routes: /${parts.join('/')} and /${router.join('/')} use different dynamic parameters.\x1b[0m`
+          )
+        }
+      }
 
       if (child) {
         current = child

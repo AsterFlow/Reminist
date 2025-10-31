@@ -22,7 +22,7 @@ const dynamicRoutes = [
   { method: 'GET', url: '/user/lookup/email/:address' },
   { method: 'GET', url: '/event/:id' },
   { method: 'GET', url: '/event/:id/comments' },
-  { method: 'POST', url: '/event/:id/comment' },
+  { method: 'post', url: '/event/:id/comment' },
   { method: 'GET', url: '/map/:location/events' },
   { method: 'GET', url: '/static/*' }, // Wildcard route
 ];
@@ -44,7 +44,7 @@ const populateMemoirist = (router: Memoirist<RouteValue>) => {
   }
 };
 
-const populateReminist = (router: Reminist<RouteValue>) => {
+const populateReminist = (router: Reminist) => {
   for (const r of allRoutes) {
     router.add(r.method, r.url, { handler: () => r.url });
   }
@@ -56,12 +56,12 @@ const populateRou3 = (router: ReturnType<typeof createRouter>) => {
   }
 };
 
-let reministRouter: Reminist<RouteValue>;
+let reministRouter: Reminist;
 let memoiristRouter: Memoirist<RouteValue>;
 let rou3Router: ReturnType<typeof createRouter>;
 
 // Setup functions
-const setupReminist = () => { reministRouter = new Reminist<RouteValue>(); populateReminist(reministRouter); };
+const setupReminist = () => { reministRouter = new Reminist(); populateReminist(reministRouter); };
 const setupMemoirist = () => { memoiristRouter = new Memoirist<RouteValue>(); populateMemoirist(memoiristRouter); };
 const setupRou3 = () => { rou3Router = createRouter(); populateRou3(rou3Router); };
 
@@ -80,7 +80,7 @@ const main = async () => {
   // Suite 0: Addition
   await runSuite('--- 0. Route Addition Test ---', bench => {
     bench
-      .add('Reminist: Add All Routes', () => { populateReminist(new Reminist<RouteValue>()); })
+      .add('Reminist: Add All Routes', () => { populateReminist(new Reminist()); })
       .add('Memoirist: Add All Routes', () => { populateMemoirist(new Memoirist<RouteValue>()); })
       .add('Rou3: Add All Routes', () => { populateRou3(createRouter()); });
   });
