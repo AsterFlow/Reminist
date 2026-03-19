@@ -3,6 +3,7 @@
 /src
 /doc
 /.vscode
+/.github
 
 .gitignore
 .gitattributes
@@ -11,6 +12,7 @@ benchmark.ts
 benchmark.js
 build.ts
 test.ts
+typedoc.json
 
 bun.lock
 eslint.config.js
@@ -18,3 +20,5 @@ eslint.config.js
 tsconfig.json
 tsconfig.cjs.json
 tsconfig.mjs.json
+
+BENCHMARK.md
