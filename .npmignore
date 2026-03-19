@@ -3,6 +3,7 @@
 /src
 /doc
 /.vscode
+/.github
 
 .gitignore
 .gitattributes
@@ -18,3 +19,5 @@ eslint.config.js
 tsconfig.json
 tsconfig.cjs.json
 tsconfig.mjs.json
+
+BENCHMARK.md
