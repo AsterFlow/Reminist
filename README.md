@@ -2,6 +2,7 @@
 
 # Reminist
 
+[![npm version](https://img.shields.io/npm/v/reminist?style=for-the-badge&colorA=302D41&colorB=f9e2af&logo=npm)](https://www.npmjs.com/package/reminist)
 ![license-info](https://img.shields.io/github/license/AsterFlow/Reminist?style=for-the-badge&colorA=302D41&colorB=f9e2af&logoColor=f9e2af)
 ![stars-info](https://img.shields.io/github/stars/AsterFlow/Reminist?colorA=302D41&colorB=f9e2af&style=for-the-badge)
 
