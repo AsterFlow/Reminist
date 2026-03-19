@@ -1,14 +1,10 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 import { Reminist } from '../src'
 
-let router: Reminist
-
 describe('Reminist - Find Method', () => {
-  beforeEach(() => {
-    router = new Reminist({ keys: ['get'] })
-    router.add('get', '/contact', { component: 'ContactPage' })
-    router.add('get', '/posts/[postId]/comments', { component: 'Comments' })
-  })
+  const router = new Reminist({ keys: ['get'] })
+    .add('get', '/contact', { component: 'ContactPage' })
+    .add('get', '/posts/[postId]/comments', { component: 'Comments' })
 
   test('should return null for a non-existent static route', () => {
     const result = router.find('get', '/contacts')

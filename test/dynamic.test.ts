@@ -1,15 +1,10 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 import { Reminist } from '../src'
 
-let router: Reminist
-
 describe('Reminist - Dynamic & Catch-all Routes', () => {
-  beforeEach(() => {
-    router = new Reminist({ keys: ['get'] })
-  })
-
   test('should find a dynamic route and extract param (:)', () => {
-    router.add('get', '/users/:id', { component: 'UserProfile' })
+    const router = new Reminist({ keys: ['get'] })
+      .add('get', '/users/:id', { component: 'UserProfile' })
 
     const result = router.find('get', '/users/123-abc')
 
@@ -18,7 +13,8 @@ describe('Reminist - Dynamic & Catch-all Routes', () => {
   })
 
   test('should find a dynamic route and extract param ([])', () => {
-    router.add('get', '/users/[id]', { component: 'UserProfile' })
+    const router = new Reminist({ keys: ['get'] })
+      .add('get', '/users/[id]', { component: 'UserProfile' })
 
     const result = router.find('get', '/users/123-abc')
 
@@ -27,7 +23,8 @@ describe('Reminist - Dynamic & Catch-all Routes', () => {
   })
 
   test('should find a route with multiple dynamic params', () => {
-    router.add('get', '/products/[category]/[productId]', { component: 'ProductPage' })
+    const router = new Reminist({ keys: ['get'] })
+      .add('get', '/products/[category]/[productId]', { component: 'ProductPage' })
 
     const result = router.find('get', '/products/electronics/456')
 
@@ -36,7 +33,8 @@ describe('Reminist - Dynamic & Catch-all Routes', () => {
   })
 
   test('should find a catch-all route and extract slug', () => {
-    router.add('get', '/docs/[...slug]', { component: 'DocsPage' })
+    const router = new Reminist({ keys: ['get'] })
+      .add('get', '/docs/[...slug]', { component: 'DocsPage' })
     
     const result = router.find('get', '/docs/getting-started/installation')
 
@@ -45,7 +43,8 @@ describe('Reminist - Dynamic & Catch-all Routes', () => {
   })
 
   test('should handle optional catch-all route with and without path', () => {
-    router.add('get', '/gallery/[[...slug]]', { component: 'GalleryPage' })
+    const router = new Reminist({ keys: ['get'] })
+      .add('get', '/gallery/[[...slug]]', { component: 'GalleryPage' })
 
     const baseResult = router.find('get', '/gallery')
     expect(baseResult.node).not.toBeNull()

@@ -2,6 +2,7 @@
   "compilerOptions": {
     // Environment setup & latest features
     "lib": ["ESNext"],
+    "target": "ESNext",
     "module": "ESNext",
     "moduleDetection": "force",
     "jsx": "react-jsx",
@@ -26,5 +27,9 @@
 
     // Some stricter flags (disabled by default)
     "noPropertyAccessFromIndexSignature": false,
-  }
+
+    "types": ["bun", "node"]
+  },
+  "include": ["src", "test", "build.ts", "benchmark.ts"],
+  "exclude": ["node_modules", "node_modules/bun-types"]
 }

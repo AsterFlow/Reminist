@@ -1,15 +1,10 @@
-import { describe, test, expect, beforeEach } from 'bun:test'
+import { describe, expect, test } from 'bun:test'
 import { Reminist } from '../src'
 
-let router: Reminist
-
 describe('Reminist - Static Routes', () => {
-  beforeEach(() => {
-    router = new Reminist({ keys: ['get', 'post'] })
-  })
-
   test('should add and find the root route', () => {
-    router.add('get', '/', { component: 'RootPage' })
+    const router = new Reminist({ keys: ['get', 'post'] })
+      .add('get', '/', { component: 'RootPage' })
 
     const result = router.find('get', '/')
 
@@ -18,7 +13,8 @@ describe('Reminist - Static Routes', () => {
   })
 
   test('should add and find a simple static route', () => {
-    router.add('get', '/about', { component: 'AboutPage' })
+    const router = new Reminist({ keys: ['get', 'post'] })
+      .add('get', '/about', { component: 'AboutPage' })
 
     const result = router.find('get', '/about')
 
@@ -28,7 +24,8 @@ describe('Reminist - Static Routes', () => {
   })
 
   test('should add and find nested static routes', () => {
-    router.add('get', '/about/us/team', { component: 'TeamPage' })
+    const router = new Reminist({ keys: ['get', 'post'] })
+      .add('get', '/about/us/team', { component: 'TeamPage' })
 
     const result = router.find('get', '/about/us/team')
 
@@ -37,8 +34,9 @@ describe('Reminist - Static Routes', () => {
   })
 
   test('should differentiate between methods', () => {
-    router.add('get', '/data', { component: 'DataViewer' })
-    router.add('post', '/data', { component: 'DataUploader' })
+    const router = new Reminist({ keys: ['get', 'post'] })
+      .add('get', '/data', { component: 'DataViewer' })
+      .add('post', '/data', { component: 'DataUploader' })
 
     const getResult = router.find('get', '/data')
     const postResult = router.find('post', '/data')

@@ -1,6 +1,8 @@
 
 /node_modules
 /dist
+/doc
 
 test.ts
 benchmark.js
+/docs

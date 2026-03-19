@@ -1,96 +1,176 @@
 import { NullProtoObj } from '../utils/nullPrototype'
+import { CHAR_ASTERISK, CHAR_COLON, CHAR_DOT, CHAR_OPEN_BRACKET } from '../utils/charCodes'
 import type { NodeParams } from '../types/node'
 import { NodeType } from '../types/node'
 
+/**
+ * Represents a single node in the routing tree.
+ * 
+ * @template Data The type of data associated with this node (e.g., a handler).
+ * @template Path The string literal representing the segment name.
+ * @template Endpoint Whether this node is a final route segment.
+ */
 export class Node<
   Data,
   Path extends string,
   Endpoint extends boolean,
 > {
+  /** The name of this path segment */
   name: string
+  /** The data stored in this node if it's an endpoint */
   store: Endpoint extends true ? Data : unknown
+  /** Indicates if this node marks the end of a valid route */
   endpoint: Endpoint
+  /** The classification of this node (Static, Dynamic, CatchAll, etc.) */
   type: NodeType
+  /** The name of the parameter extracted from this segment, if any */
   paramName: string
 
-  public static: NullProtoObj<Node<Data, any, any>> = new NullProtoObj()
-  public dynamic: Node<Data, any, any> | null = null
-  public catchAll: Node<Data, any, any> | null = null
-  public optionalCatchAll: Node<Data, any, any> | null = null
-  public wildcard: Node<Data, any, any> | null = null
-  
+  /** Direct child nodes with static names */
+  public staticChildren: NullProtoObj<Node<Data, any, any>> = new NullProtoObj()
+  /** Child node for simple dynamic segments (e.g., ':id') */
+  public dynamicChild: Node<Data, any, any> | null = null
+  /** Child node for catch-all segments (e.g., '[...slug]') */
+  public catchAllChild: Node<Data, any, any> | null = null
+  /** Child node for optional catch-all segments (e.g., '[[...slug]]') */
+  public optionalCatchAllChild: Node<Data, any, any> | null = null
+  /** Child node for wildcard segments (e.g., '*') */
+  public wildcardChild: Node<Data, any, any> | null = null
+
+  /** Total number of direct children */
   public childCount = 0
-  public nonStaticChildCount = 0
+  /** Number of non-static children */
+  public dynamicChildCount = 0
 
+  /**
+   * Creates a new Node instance.
+   * @param params Initialization parameters including name and endpoint status.
+   */
   constructor(params: NodeParams<Data, Endpoint, Path>) {
-    this.name = params.name
+    this.name     = params.name
     this.endpoint = params.endpoint as Endpoint
-    this.store = (params as { store: Data }).store
-    
-    const name = this.name
-    if (name.startsWith(':')) {
-      this.type = NodeType.Dynamic
-      this.paramName = name.substring(1)
-    } else if (name.startsWith('[[...')) {
-      this.type = NodeType.OptionalCatchAll
-      this.paramName = name.substring(5, name.length - 2)
-    } else if (name.startsWith('[...')) {
-      this.type = NodeType.CatchAll
-      this.paramName = name.substring(4, name.length - 1)
-    } else if (name.startsWith('[')) {
-      this.type = NodeType.Dynamic
-      this.paramName = name.substring(1, name.length - 1)
-    } else if (name === '*') {
-      this.type = NodeType.Wildcard
-      this.paramName = '*'
-    } else {
-      this.type = NodeType.Static
-      this.paramName = ''
+    this.store    = (params as any).store
+
+    const { type, paramName } = Node.resolveSegmentType(this.name)
+    this.type      = type
+    this.paramName = paramName
+  }
+
+  /**
+   * Derives the NodeType and extracted parameter name from a raw path segment.
+   *
+   * Supported segment syntaxes:
+   * - `:id`       → Dynamic (paramName: 'id')
+   * - `*`         → Wildcard (paramName: '*')
+   * - `[id]`      → Dynamic (paramName: 'id')
+   * - `[...id]`   → CatchAll (paramName: 'id')
+   * - `[[...id]]` → OptionalCatchAll (paramName: 'id')
+   * - Otherwise   → Static (paramName: '')
+   * 
+   * @param segment The raw segment string to analyze.
+   * @returns An object containing the derived type and parameter name.
+   */
+  public static resolveSegmentType(
+    segment: string,
+  ): { type: NodeType; paramName: string } {
+    const leadingCharCode = segment.charCodeAt(0)
+
+    if (leadingCharCode === CHAR_COLON) {
+      return {
+        type: NodeType.Dynamic,
+        paramName: segment.substring(1),
+      }
+    }
+
+    if (leadingCharCode === CHAR_ASTERISK) {
+      return {
+        type: NodeType.Wildcard,
+        paramName: '*',
+      }
+    }
+
+    if (leadingCharCode === CHAR_OPEN_BRACKET) {
+      const secondCharCode = segment.charCodeAt(1)
+
+      if (secondCharCode === CHAR_OPEN_BRACKET) {
+        // [[...id]]  →  strip leading '[[...' (5 chars) and trailing ']]' (2 chars)
+        return {
+          type: NodeType.OptionalCatchAll,
+          paramName: segment.substring(5, segment.length - 2),
+        }
+      }
+
+      if (secondCharCode === CHAR_DOT) {
+        // [...id]  →  strip leading '[...' (4 chars) and trailing ']' (1 char)
+        return {
+          type: NodeType.CatchAll,
+          paramName: segment.substring(4, segment.length - 1),
+        }
+      }
+
+      // [id]  →  strip leading '[' (1 char) and trailing ']' (1 char)
+      return {
+        type: NodeType.Dynamic,
+        paramName: segment.substring(1, segment.length - 1),
+      }
+    }
+
+    return {
+      type: NodeType.Static,
+      paramName: '',
     }
   }
 
-  addChild(node: Node<Data, string, boolean>): void {
+  /**
+   * Adds a child node to this node.
+   * @param child The node to add as a child.
+   */
+  addChild(child: Node<Data, string, boolean>): void {
     this.childCount++
+    if (child.type !== NodeType.Static) this.dynamicChildCount++
 
-    if (node.type !== NodeType.Static) this.nonStaticChildCount++
-    switch (node.type) {
+    switch (child.type) {
     case NodeType.Static:
-      if (!this.static) this.static = new NullProtoObj()
-      this.static![node.name] = node
+      this.staticChildren[child.name] = child
       break
     case NodeType.Dynamic:
-      this.dynamic = node
+      this.dynamicChild = child
       break
     case NodeType.CatchAll:
-      this.catchAll = node
+      this.catchAllChild = child
       break
     case NodeType.OptionalCatchAll:
-      this.optionalCatchAll = node
+      this.optionalCatchAllChild = child
       break
     case NodeType.Wildcard:
-      this.wildcard = node
+      this.wildcardChild = child
       break
     }
   }
 
-  removeChild(node: Node<Data, any, any>): void {
+  /**
+   * Removes a child node from this node.
+   * @param child The node to remove.
+   */
+  removeChild(child: Node<Data, any, any>): void {
     this.childCount--
-    if (node.type !== NodeType.Static) this.nonStaticChildCount--
-    switch (node.type) {
+    if (child.type !== NodeType.Static) this.dynamicChildCount--
+
+    switch (child.type) {
     case NodeType.Static:
-      if (this.static) delete this.static[node.name]
+      if (this.staticChildren) delete this.staticChildren[child.name]
       break
     case NodeType.Dynamic:
-      this.dynamic = null
+      this.dynamicChild = null
       break
     case NodeType.CatchAll:
-      this.catchAll = null
+      this.catchAllChild = null
       break
     case NodeType.OptionalCatchAll:
-      this.optionalCatchAll = null
+      this.optionalCatchAllChild = null
       break
     case NodeType.Wildcard:
-      this.wildcard = null
+      this.wildcardChild = null
       break
     }
   }
