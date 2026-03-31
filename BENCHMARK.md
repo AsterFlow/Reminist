@@ -1,8 +1,8 @@
 # 📊 Router Benchmark Report
 
-> Generated: Thu, 19 Mar 2026 06:20:56 GMT
+> Generated: Tue, 31 Mar 2026 03:54:41 GMT
 
-The following benchmarks compare Reminist against other high-performance routers like Memoirist and Rou3.
+The following benchmarks compare Reminist against other high-performance routers like Memoirist, Rou3, and Radix-Way.
 
 > Lower latency is better. Higher throughput is better.
 
@@ -12,29 +12,35 @@ This test measures the performance of adding a large set of routes to the router
 
 | Task Name | Latency avg (ns) | Throughput avg (ops/s) |
 | :--- | :--- | :--- |
-| **Reminist: Route Addition Test** | **1614.99** | **672,686** |
-| Rou3: Route Addition Test | 1789.14 | 593,208 |
-| Memoirist: Route Addition Test | 7027.15 | 150,635 |
+| **Reminist: Route Addition Test** | **4739.72** | **249,037** |
+| Memoirist: Route Addition Test | 19491.91 | 59,637 |
+| Rou3: Route Addition Test | 32086.34 | 34,753 |
+| Radix-way: Route Addition Test | 32917.17 | 33,216 |
+
 
 ### Find Test (Static)
 
-This test measures lookup performance for static routes (e.g., `/about/contact`).
+This test measures lookup performance for static routes.
 
 | Task Name | Latency avg (ns) | Throughput avg (ops/s) |
 | :--- | :--- | :--- |
-| **Reminist: Find (Static)** | **36.74** | **30,537,148** |
-| Rou3: Find (Static) | 37.91 | 26,817,594 |
-| Memoirist: Find (Static) | 71.86 | 14,793,010 |
+| **Reminist: Find (Static)** | **85.94** | **12,962,672** |
+| Radix-way: Find (Static) | 81.63 | 12,712,037 |
+| Rou3: Find (Static) | 90.48 | 11,392,852 |
+| Memoirist: Find (Static) | 159.62 | 6,694,837 |
+
 
 ### Find Test (Dynamic & Wildcard)
 
-This test measures lookup performance for routes with dynamic parameters or wildcards (e.g., `/users/:id` or `/assets/*`).
+This test measures lookup performance for routes with dynamic parameters or wildcards.
 
 | Task Name | Latency avg (ns) | Throughput avg (ops/s) |
 | :--- | :--- | :--- |
-| Memoirist: Find (Dynamic & Wildcard) | 91.53 | 11,656,803 |
-| Rou3: Find (Dynamic & Wildcard) | 101.65 | 10,583,588 |
-| **Reminist: Find (Dynamic & Wildcard)** | **107.43** | **9,665,711** |
+| Memoirist: Find (Dynamic & Wildcard) | 217.00 | 4,980,841 |
+| **Reminist: Find (Dynamic & Wildcard)** | **228.21** | **4,590,351** |
+| Radix-way: Find (Dynamic & Wildcard) | 243.04 | 4,476,760 |
+| Rou3: Find (Dynamic & Wildcard) | 247.95 | 4,331,856 |
+
 
 ### Find Test (Non-Existent)
 
@@ -42,16 +48,19 @@ This test measures performance when searching for a route that does not exist.
 
 | Task Name | Latency avg (ns) | Throughput avg (ops/s) |
 | :--- | :--- | :--- |
-| **Reminist: Find (Non-Existent)** | **52.13** | **20,170,961** |
-| Memoirist: Find (Non-Existent) | 53.01 | 19,079,548 |
-| Rou3: Find (Non-Existent) | 107.78 | 9,843,496 |
+| **Reminist: Find (Non-Existent)** | **113.38** | **9,391,062** |
+| Memoirist: Find (Non-Existent) | 120.41 | 8,553,825 |
+| Radix-way: Find (Non-Existent) | 182.51 | 6,222,235 |
+| Rou3: Find (Non-Existent) | 306.06 | 3,639,270 |
+
 
 #### Analysis
 
-The benchmarks highlight Reminist's exceptional performance in the most common routing operations.
+The following observations are based on the latest benchmark run:
 
-  * **Route Addition**: Reminist shows leading performance in route registration, making it ideal for applications with dynamic routing or frequent setup phases.
+  * **Route Addition**: Reminist shows leading performance in route registration.
   * **Static Routes**: For static routes, Reminist leads with the lowest latency and highest throughput.
-  * **Non-Existent Routes**: Reminist is also the fastest at handling invalid paths.
+  * **Dynamic & Wildcard Routes**: Memoirist is the fastest and most efficient for complex routing patterns.
+  * **Non-Existent Routes**: Reminist is the quickest at handling invalid or unmatched paths.
 
-Overall, Reminist consistently delivers competitive and often leading performance across all categories.
+> Compare the results in the tables above for exact latency differences.
